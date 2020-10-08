@@ -1259,17 +1259,17 @@ Mavlink::configure_stream(const char *stream_name, const float rate)
 
 	for (const auto &stream : _streams) {
 		if (strcmp(stream_name, stream->get_name()) == 0) {
-			if (interval != 0) {
-				/* set new interval */
-				stream->set_interval(interval);
-
-			} else {
-				/* delete stream */
+			if (interval == 0) {
+				// delete stream
 				_streams.deleteNode(stream);
 				return OK; // must finish with loop after node is deleted
+			} else if (interval != stream->get_interval()) {
+				// set new interval
+				_streams.remove(stream);
+				stream->set_interval(interval);
+				_streams.add(stream);
+				return OK;
 			}
-
-			return OK;
 		}
 	}
 
@@ -1280,7 +1280,6 @@ Mavlink::configure_stream(const char *stream_name, const float rate)
 	if (stream != nullptr) {
 		stream->set_interval(interval);
 		_streams.add(stream);
-
 		return OK;
 	}
 
